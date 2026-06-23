@@ -318,13 +318,13 @@ function cardHTML(b,state){
   if(meal){main='<div class="main"><div class="skl">'+svg("meal",15,"var(--meal)")+esc(titleOf(b))+'</div><div class="bk">'+esc(t("hall"))+'</div></div>';}
   else if(self){main='<div class="main"><div class="skl">'+esc(t("self"))+'</div></div>';}
   else{main='<div class="main"><div class="skl">'+esc(b.skill||b.book)+(b.teacher?' <span class="tch">'+esc(b.teacher)+'</span>':'')+'</div><div class="bk"><span class="sw" style="background:'+esc(b.color)+'"></span>'+esc(b.book)+'</div></div>';}
-  // 우측: past→체크 / class→아이콘↑+강의실↓ / meal·self→없음
+  // 우측: class→아이콘↑+강의실↓(+과거엔 체크) / meal·self→과거엔 체크만
   var rt='';
-  if(state==="past"){
+  if(!meal&&!self){
+    var chk=state==="past"?'<div style="margin-top:2px">'+svg("check",12,"#9aa0a8")+'</div>':'';
+    rt='<div class="roomcol">'+typeIcon(b.type,"var(--blue)")+'<div class="rnum">'+esc(b.room)+'</div>'+chk+'</div>';
+  } else if(state==="past"){
     rt='<div class="roomcol">'+svg("check",16,"#9aa0a8")+'</div>';
-  } else if(!meal&&!self){
-    var col=state==="now"?"var(--blue)":"var(--blue)";
-    rt='<div class="roomcol">'+typeIcon(b.type,col)+'<div class="rnum">'+esc(b.room)+'</div></div>';
   }
   return '<div class="cls row '+(meal?"meal ":self?"self ":"")+state+'">'+loc+main+rt+'</div>';
 }

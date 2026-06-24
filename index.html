@@ -58,8 +58,10 @@ button{font-family:inherit;cursor:pointer}
 .lbanner{display:flex;align-items:center;gap:7px;background:#E7F5EE;border:.5px solid #BFE6D0;color:var(--ok);
   border-radius:11px;padding:8px 12px;margin:0 18px 8px;font-size:12.5px;font-weight:500}
 .lbanner b{font-weight:700}
-.now{margin:0 18px;position:relative;overflow:hidden;border-radius:16px;padding:16px 18px;color:#fff;background:var(--blue)}
+.now{margin:0 18px;position:relative;overflow:hidden;border-radius:18px;padding:13px 18px 11px;color:#fff;background:var(--blue)}
 .now.mealnow{background:var(--meal)}
+.now h1{font-size:28px;font-weight:500;margin:6px 0 5px;display:flex;align-items:center;gap:8px}
+.now .timebadge{font-size:11.5px;opacity:.78;letter-spacing:.3px;margin:1px 0 4px}
 .now .wedge{position:absolute;left:0;bottom:0;width:100%;height:100%;background:var(--ink);clip-path:polygon(0 64%,26% 100%,0 100%);opacity:.9}
 .now .in{position:relative}
 .now .lbl{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.9}
@@ -67,7 +69,7 @@ button{font-family:inherit;cursor:pointer}
 .now h1{font-size:21px;font-weight:500;margin:6px 0 4px;display:flex;align-items:center;gap:7px}
 .now .meta{font-size:12.5px;opacity:.92;line-height:1.7}
 .sw{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:5px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.ringwrap{position:relative;width:78px;height:78px;flex:none}
+.ringwrap{position:relative;width:96px;height:96px;flex:none}
 .ringwrap .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .bar{height:7px;border-radius:999px;background:rgba(255,255,255,.25)}
 .bar>span{display:block;height:100%;border-radius:999px;background:#fff}
@@ -84,24 +86,29 @@ button{font-family:inherit;cursor:pointer}
 .pasthead .ln{flex:1;height:0;border-top:1px solid #E2E4E8}
 
 /* schedule rows */
-.cls{display:flex;align-items:flex-start;gap:11px;background:#fff;border:.5px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:7px}
+.cls{display:flex;align-items:center;gap:11px;background:#fff;border:.5px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:7px}
 .cls.self{border:.5px dashed #c3ccdb}
 .cls.meal{background:var(--mealbg);border:.5px solid #EFE2C9}
 .cls.past{opacity:.4}
 .cls .loc{width:38px;flex:none}
-.cls .time{font-size:11px;line-height:1.3;color:var(--muted)}
+.cls .time{width:38px}
+.cls .ts{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.35}
+.cls .te{font-size:10.5px;color:var(--sub);line-height:1.35;padding-left:5px}
 .cls .main{flex:1;min-width:0}
 .cls .skl{font-size:15px;font-weight:600;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .cls.meal .skl,.cls.self .skl{font-weight:600}
 .cls .tch{font-size:12px;font-weight:400;color:var(--sub)}
 .cls .bk{font-size:12px;color:var(--muted);display:flex;align-items:center;margin-top:3px}
-.cls .roomcol{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:42px;text-align:center}
-.cls .rnum{font-size:12px;font-weight:700;color:var(--blue);line-height:1}
-.cls.meal .rnum{color:var(--meal)}
+.cls .roomcol{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:46px;text-align:center}
+.chip{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:2px 6px;line-height:1.4;white-space:nowrap}
+.chip-type{background:#F3F4F6;color:#6B7280}
+.chip-g{background:#FEF3C7;color:#92400E}
+.chip-b{background:#DBEAFE;color:#1D4ED8}
+.chip-c{background:#FEE2E2;color:#991B1B}
+.chip-def{background:#F3F4F6;color:#374151}
 .inprog{font-size:10px;color:var(--blue);font-weight:600}
 
-.photo{border-top:.5px solid #EAEBEF;margin-top:10px;padding:12px 18px;text-align:center}
-.photo button{border:none;background:none;color:var(--muted);font-size:11.5px;display:inline-flex;align-items:center;gap:5px}
+
 
 .scrim{position:fixed;inset:0;background:rgba(14,14,16,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
 .scrim.show{opacity:1;pointer-events:auto}
@@ -265,7 +272,27 @@ function titleOf(b){return b.cat==="meal"?t(b.key):(b.cat==="self"?t("self"):(b.
 function typeLabel(ty){return ty==="1:1"?"1:1":(ty==="gc"?t("tgroup"):t("self"));}
 function periodNo(b){var cs=classes();for(var i=0;i<cs.length;i++)if(cs[i].id===b.id)return i+1;return null;}
 
-function nowState(){var bs=todayBlocks(),cur=nowMinF();
+function mergedBlocks(){
+  var bs=todayBlocks();
+  if(isWeekend())return bs;
+  var res=[],i=0;
+  while(i<bs.length){
+    var b=bs[i];
+    if(b.cat==='self'){
+      var ms=b.s,me=b.e,j=i+1;
+      // 앞 블록 끝이 10분 이내면 그 시점부터 시작 (앞 휴식 흡수)
+      if(res.length>0&&toMin(ms)-toMin(res[res.length-1].e)<=10) ms=res[res.length-1].e;
+      // 연속된 셀프스터디 블록 합치기 (간격 15분 이하)
+      while(j<bs.length&&bs[j].cat==='self'&&toMin(bs[j].s)-toMin(me)<=15){me=bs[j].e;j++;}
+      // 뒤 블록 시작이 10분 이내면 거기까지 연장 (뒤 휴식 흡수)
+      if(j<bs.length&&toMin(bs[j].s)-toMin(me)<=10) me=bs[j].s;
+      res.push({id:'sm'+i,cat:'self',type:'self',s:ms,e:me,__past:false});
+      i=j;
+    }else{res.push(b);i++;}
+  }
+  return res;
+}
+function nowState(){var bs=mergedBlocks(),cur=nowMinF();
   if(!bs.length)return {kind:"empty"};
   for(var i=0;i<bs.length;i++){var b=bs[i],a=toMin(b.s),z=toMin(b.e);
     if(cur>=a&&cur<z)return {kind:"active",b:b,remain:(z-cur)*60,total:(z-a)*60};
@@ -277,42 +304,108 @@ function laundryOpen(){var cur=nowMinF();for(var i=0;i<LAUNDRY.length;i++){if(cu
 function langBar(attr){attr=attr||"data-lang";var o=[["en","EN"],["ko","\ud55c"],["ja","\u65e5"],["zh","\u7e41"]];
   return '<div class="langs">'+o.map(function(x){return '<button '+attr+'="'+x[0]+'" class="'+(lang===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div>';}
 
+function isColorDark(hex){if(!hex||hex.length<7)return true;var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b2=parseInt(hex.slice(5,7),16);return (r*299+g*587+b2*114)/1000<155;}
+function bookBox(book,color){var tc=isColorDark(color)?'#fff':'rgba(0,0,0,.78)';return '<span style="background:'+esc(color)+';color:'+tc+';border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:600">'+esc(book)+'</span>';}
+
 function nowCard(st){
-  if(st.kind==="active"){var b=st.b,frac=st.remain/st.total,C=207.3,off=(C*(1-frac)).toFixed(1),meal=b.cat==="meal",self=b.cat==="self";
+  if(st.kind==="active"){
+    var b=st.b,frac=st.remain/st.total,meal=b.cat==="meal",self=b.cat==="self";
     var pno=periodNo(b);
-    var lbl=meal?t("eating"):(t("inClass")+(pno&&!self?(" \u00b7 "+pno+t("period")):(self&&pno?(" \u00b7 "+pno+t("period")):"")));
-    var typetag=(b.cat==="class")?' <span class="tag" style="background:rgba(255,255,255,.22);color:#fff;margin-left:2px">'+typeLabel(b.type)+'</span>':'';
-    var meta = meal? '<div class="meta">'+esc(t("hall"))+'</div>'
-      : (self? '' : '<div class="meta">'+svg("pin",14,"#fff")+' '+esc(b.room)+' &nbsp;\u00b7&nbsp; '+svg("user",14,"#fff")+' '+esc(b.teacher)+'<br><span class="sw" style="background:'+esc(b.color)+'"></span>'+esc(b.book)+'</div>');
-    return '<div class="now '+(meal?"mealnow":"")+' row"><div class="wedge"></div><div class="in" style="display:flex;align-items:center;gap:14px">'
-      +'<div style="flex:1;min-width:0"><div class="lbl"><span class="dot"></span>'+esc(lbl)+typetag+'</div>'
-      +'<h1>'+(meal?svg("meal",18,"#fff"):"")+esc(titleOf(b))+'</h1>'+meta+'</div>'
-      +'<div class="ringwrap"><svg viewBox="0 0 80 80" width="78" height="78"><circle cx="40" cy="40" r="33" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7"/>'
-      +'<circle id="ring" cx="40" cy="40" r="33" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/></svg>'
-      +'<div class="ctr"><div id="cd" class="mono" style="font-size:17px;font-weight:500">'+fmtCD(st.remain)+'</div><div style="font-size:9px;opacity:.8;margin-top:2px">'+esc(t("remaining"))+'</div></div></div></div></div>';
+    var lbl=meal?t("eating"):(self?t("self"):(t("inClass")+(pno?(" \u00b7 "+pno+t("period")):"")));
+    var barW=Math.round((meal||self?frac:(1-frac))*100);
+    /* ── 식사 ── */
+    if(meal){
+      return '<div class="now mealnow row"><div class="wedge"></div><div class="in" style="padding:0 0 10px">'
+        +'<div class="lbl"><span class="dot"></span>'+esc(lbl)+'</div>'
+        +'<div style="text-align:center;margin-top:20px;font-size:44px;font-weight:800;line-height:1">'+esc(titleOf(b))+'</div>'
+        +'<div style="text-align:center;margin-top:7px;font-size:13px;opacity:.65;font-variant-numeric:tabular-nums">'+esc(b.s)+' \u2013 '+esc(b.e)+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">'
+        +'<div style="font-size:13px;opacity:.65">'+esc(t("remaining"))+'</div>'
+        +'<div class="mono" style="font-size:17.5px;font-weight:600" id="cd">'+fmtCD(st.remain)+'</div>'
+        +'</div><div class="bar" style="margin-top:8px"><span id="pbar" style="width:'+barW+'%"></span></div>'
+        +'</div></div>';
+    }
+    /* ── 셀프스터디 ── */
+    if(self){
+      return '<div class="now row"><div class="wedge"></div><div class="in" style="padding:0 0 10px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between">'
+        +'<div class="lbl"><span class="dot"></span>'+esc(lbl)+'</div>'
+        +'<div style="font-size:11.5px;opacity:.6;font-variant-numeric:tabular-nums">'+esc(b.s)+' \u2013 '+esc(b.e)+'</div>'
+        +'</div>'
+        +'<div style="text-align:center;margin-top:18px;font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1px" id="cd">'+fmtCD(st.remain)+'</div>'
+        +'<div style="text-align:center;font-size:12px;opacity:.65;margin-top:5px">'+esc(t("remaining"))+'</div>'
+        +'<div class="bar" style="margin-top:14px"><span id="pbar" style="width:'+barW+'%"></span></div>'
+        +'</div></div>';
+    }
+    /* ── 수업 ── */
+    return '<div class="now row"><div class="wedge"></div><div class="in" style="padding:0 0 10px">'
+      +'<div class="lbl"><span class="dot"></span>'+esc(lbl)+'</div>'
+      +'<div style="text-align:center;margin-top:20px;font-size:44px;font-weight:800;letter-spacing:-.5px;line-height:1">'+esc(titleOf(b))+'</div>'
+      +'<div style="height:13px"></div>'
+      +'<div style="text-align:right;margin-bottom:4px">'
+      +'<span style="font-size:13.5px;opacity:.9">'+esc(b.teacher)+'</span>'
+      +' <span class="chip chip-type">'+typeLabel(b.type)+'</span>'
+      +'</div>'
+      +'<div style="text-align:right">'+bookBox(b.book,b.color)+' <span class="chip '+roomChipCls(b.room)+'">'+esc(b.room)+'</span></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:13px">'
+      +'<div class="mono" style="font-size:17.5px;font-weight:500;opacity:.52;letter-spacing:.2px">'+esc(b.s)+' \u2013 '+esc(b.e)+'</div>'
+      +'<div class="mono" style="font-size:17.5px;font-weight:600" id="cd">'+fmtCD(st.remain)+' <span style="font-size:10px;opacity:.72;font-weight:400">'+esc(t("remaining"))+'</span></div>'
+      +'</div><div class="bar" style="margin-top:8px"><span id="pbar" style="width:'+barW+'%"></span></div>'
+      +'</div></div>';
   }
-  if(st.kind==="break"){var n=st.next,w=Math.max(0,Math.round(st.remain/st.total*100)),box;
-    if(n.cat==="meal"){box='<div class="roombox mealr"><div style="flex:1"><div class="rl">'+esc(t("nextMeal"))+'</div><div class="rno">'+esc(titleOf(n))+'</div><div class="rmv">'+esc(t("hall"))+' \u00b7 '+esc(n.s)+'</div></div><div class="ric">'+svg("meal",30,"var(--meal)")+'</div></div>';}
-    else if(n.cat==="self"){box='<div class="roombox"><div style="flex:1"><div class="rl">'+esc(t("next"))+'</div><div class="rno" style="font-size:22px">'+esc(t("self"))+'</div><div class="rmv">'+esc(n.s)+'</div></div><div class="ric">'+svg("book",28,"#0B54CC")+'</div></div>';}
-    else{var mv=(st.prev&&st.prev.room?esc(st.prev.room)+" \u2192 ":"")+esc(n.room)+" \u00b7 "+esc(titleOf(n))+(n.teacher?" \u00b7 "+esc(n.teacher):"");
-      box='<div class="roombox"><div style="flex:1"><div class="rl">'+esc(t("nextRoom"))+'</div><div class="rno">'+esc(n.room)+'</div><div class="rmv">'+mv+'</div></div><div class="ric">'+svg("pin",30,"#0B54CC")+'</div></div>';}
-    return '<div class="now row"><div class="wedge"></div><div class="in"><div style="display:flex;align-items:center;justify-content:space-between"><div class="lbl"><span class="dot"></span>'+esc(t("onBreak"))+'</div>'
-      +'<div id="cd" class="mono" style="font-size:18px;font-weight:500">'+fmtCD(st.remain)+'</div></div>'
-      +'<div class="bar" style="margin:12px 0 0"><span id="pbar" style="width:'+w+'%"></span></div>'+box+'</div></div>';
+  /* ── 쉬는시간 ── */
+  if(st.kind==="break"){
+    var n=st.next,w=Math.max(0,Math.round(st.remain/st.total*100));
+    var durMin=Math.round(st.total/60);
+    var breakStart=st.prev?st.prev.e:"";
+    var breakEnd=n.s;
+    var box;
+    if(n.cat==="meal"){
+      box='<div class="roombox mealr"><div style="flex:1"><div class="rl">'+esc(t("nextMeal"))+'</div>'
+        +'<div class="rno" style="color:var(--meal)">'+esc(titleOf(n))+'</div>'
+        +'<div class="rmv">'+esc(t("hall"))+' \u00b7 '+esc(n.s)+'</div></div>'
+        +'<div class="ric">'+svg("meal",28,"var(--meal)")+'</div></div>';
+    } else if(n.cat==="self"){
+      box='<div class="roombox"><div style="flex:1"><div class="rl">'+esc(t("next"))+'</div>'
+        +'<div class="rno" style="font-size:22px">'+esc(t("self"))+'</div>'
+        +'<div class="rmv">'+esc(n.s)+' \u2013 '+esc(n.e)+'</div></div>'
+        +'<div class="ric">'+svg("book",28,"#0B54CC")+'</div></div>';
+    } else {
+      var fromRoom=st.prev&&st.prev.room?esc(st.prev.room)+" \u2192 ":"";
+      var moveLine='<div style="display:inline-flex;align-items:center;gap:4px;background:#EAF0FB;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:600;color:#0B54CC;margin-top:5px">'
+        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0B54CC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+        +fromRoom+esc(n.room)+' \u00b7 '+esc(titleOf(n))+(n.teacher?" \u00b7 "+esc(n.teacher):"")+'</div>';
+      box='<div class="roombox"><div style="flex:1"><div class="rl">'+esc(t("nextRoom"))+'</div>'
+        +'<div class="rno">'+esc(n.room)+'</div>'+moveLine+'</div>'
+        +'<div class="ric">'+svg("pin",28,"#0B54CC")+'</div></div>';
+    }
+    return '<div class="now row"><div class="wedge"></div><div class="in" style="padding:0 0 10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between">'
+      +'<div class="lbl"><span class="dot"></span>'+esc(t("onBreak"))+' <span style="background:rgba(255,255,255,.2);border-radius:5px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:4px">'+durMin+'min</span></div>'
+      +'<div style="font-size:11.5px;opacity:.65;font-variant-numeric:tabular-nums">'+esc(breakStart)+' \u2013 '+esc(breakEnd)+'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">'
+      +'<div class="mono" style="font-size:42px;font-weight:800;line-height:1;letter-spacing:-1px" id="cd">'+fmtCD(st.remain)+'</div>'
+      +'<div style="font-size:11px;opacity:.65;margin-bottom:5px">'+esc(t("remaining"))+'</div>'
+      +'</div>'
+      +'<div class="bar" style="margin-top:10px"><span id="pbar" style="width:'+w+'%"></span></div>'
+      +box+'</div></div>';
   }
   if(st.kind==="before"){var n2=st.next,meal2=n2.cat==="meal";
     return '<div class="now '+(meal2?"mealnow":"")+' row"><div class="wedge"></div><div class="in"><div class="lbl">'+esc(t("before"))+' '+esc(n2.s)+'</div>'
-      +'<h1 style="margin-bottom:0">'+(meal2?svg("meal",18,"#fff"):"")+esc(titleOf(n2))+'</h1>'
+      +'<h1 style="margin-bottom:0">'+(meal2?svg("meal",20,"#fff"):"")+esc(titleOf(n2))+'</h1>'
       +'<div class="meta">'+(meal2?esc(t("hall")):((n2.room?svg("pin",14,"#fff")+' '+esc(n2.room)+' &nbsp;\u00b7&nbsp; ':"")+(n2.teacher?svg("user",14,"#fff")+' '+esc(n2.teacher):"")))+'</div></div></div>';
   }
   return '<div class="now row"><div class="wedge"></div><div class="in" style="padding:4px 0"><div class="lbl">'+svg("check",15,"#7Fffd0")+' '+esc(t(st.kind==="empty"?"weekend":"after"))+'</div></div></div>';
 }
 
-function typeIcon(ty,col){return ty==="gc"?svg("users",14,col):svg("user",14,col);}
+function roomChipCls(room){if(!room)return 'chip-def';var p=room.charAt(0).toLowerCase();return p==="g"?"chip-g":(p==="b"?"chip-b":(p==="c"?"chip-c":"chip-def"));}
+function typeChip(ty){var lbl=ty==="1:1"?"1:1":t("tgroup");return '<span class="chip chip-type">'+esc(lbl)+'</span>';}
+function roomChip(room){return '<span class="chip '+roomChipCls(room)+'">'+esc(room)+'</span>';}
 function cardHTML(b,state){
   var meal=b.cat==="meal",self=b.cat==="self";
   // 좌측: 시간만
-  var loc='<div class="loc"><div class="time mono">'+esc(b.s)+'<br>'+esc(b.e)+'</div></div>';
+  var loc='<div class="loc"><div class="time"><div class="ts mono">'+esc(b.s)+'</div><div class="te mono">'+esc(b.e)+'</div></div></div>';
   // 중앙: 과목+선생님+교재
   var main;
   if(meal){main='<div class="main"><div class="skl">'+svg("meal",15,"var(--meal)")+esc(titleOf(b))+'</div><div class="bk">'+esc(t("hall"))+'</div></div>';}
@@ -322,7 +415,7 @@ function cardHTML(b,state){
   var rt='';
   if(!meal&&!self){
     var chk=state==="past"?'<div style="margin-top:2px">'+svg("check",12,"#9aa0a8")+'</div>':'';
-    rt='<div class="roomcol">'+typeIcon(b.type,"var(--blue)")+'<div class="rnum">'+esc(b.room)+'</div>'+chk+'</div>';
+    rt='<div class="roomcol">'+typeChip(b.type)+roomChip(b.room)+chk+'</div>';
   } else if(state==="past"){
     rt='<div class="roomcol">'+svg("check",16,"#9aa0a8")+'</div>';
   }
@@ -335,7 +428,7 @@ function listHTML(arr,cur){var h="";for(var i=0;i<arr.length;i++){var b=arr[i];
   h+=cardHTML(b,st);}return h;}
 
 function renderHome(){
-  var st=nowState(),dd=dday(),cur=nowMinF(),bs=todayBlocks();
+  var st=nowState(),dd=dday(),cur=nowMinF(),bs=mergedBlocks();
   var past=[],up=[];window.__nextId=(st.kind==="break")?st.next.id:null;
   bs.forEach(function(b){var z=toMin(b.e),a=toMin(b.s);
     if(z<=cur){b.__past=true;past.push(b);}else if(a<=cur&&cur<z){/*active -> now card*/}else{b.__past=false;up.push(b);}});
@@ -347,8 +440,7 @@ function renderHome(){
     +'<button class="gear" id="gear">'+svg("gear",19,"#5b6068")+'</button></div></div></div>';
   var pastHTML=past.length?('<div class="sec" style="padding-top:4px"><div class="pasthead"><span class="ln"></span>'+esc(t("earlier"))+'<span class="ln"></span></div>'+listHTML(past,cur)+'</div>'):'';
   var nowwrap='<div id="nowwrap">'+(lu?'<div class="lbanner row">'+svg("wash",16,"var(--ok)")+'<span><b>'+esc(t("laundry"))+'</b> \u00b7 '+esc(lu)+esc(t("launUntil"))+'</span></div>':'')+nowCard(st)+'</div>';
-  var upHTML='<div id="up" class="sec" style="padding-top:10px">'+(up.length?listHTML(up,cur):(bs.length?'':'<div style="text-align:center;padding:24px;color:var(--muted)">'+esc(t("weekend"))+'</div>'))
-    +'<div class="photo"><button id="photoBtn">'+svg("cam",14,"#9aa0a8")+' '+esc(t("photo"))+'</button></div></div>';
+  var upHTML='<div id="up" class="sec" style="padding-top:10px;padding-bottom:24px">'+(up.length?listHTML(up,cur):(bs.length?'':'<div style="text-align:center;padding:24px;color:var(--muted)">'+esc(t("weekend"))+'</div>'))+'</div>';
   $("app").innerHTML=topbar+pastHTML+nowwrap+upHTML;
   var fabEl=$("fab");if(fabEl){var fabLabels={en:"Now",ko:"\uc9c0\uae08",ja:"\u4eca",zh:"\u73fe\u5728"};
     fabEl.innerHTML=svgArrowUp()+'<span>'+(fabLabels[lang]||"Now")+'</span>';}
@@ -390,14 +482,20 @@ function startTick(){if(tickTimer)clearInterval(tickTimer);
   tickTimer=setInterval(function(){var st=nowState();var id=st.kind==="active"?st.b.id:(st.kind==="break"?st.next.id:null);var lu=laundryOpen();
     if(st.kind!==lastKind||id!==lastId||lu!==lastLu){renderHome();return;}
     var cd=$("cd");
-    if(st.kind==="active"){if(cd)cd.textContent=fmtCD(st.remain);var r=$("ring");if(r)r.setAttribute("stroke-dashoffset",(207.3*(1-st.remain/st.total)).toFixed(1));}
+    if(st.kind==="active"){
+      var b=st.b,frac=st.remain/st.total,meal=b.cat==="meal",self=b.cat==="self";
+      var barW=Math.max(0,Math.round((meal||self?frac:(1-frac))*100));
+      var pb=$("pbar");if(pb)pb.style.width=barW+"%";
+      if(cd){if(meal){cd.textContent=fmtCD(st.remain);}
+        else if(self){cd.textContent=fmtCD(st.remain);}
+        else{cd.innerHTML=fmtCD(st.remain)+' <span style="font-size:10px;opacity:.72;font-weight:400">'+t("remaining")+'</span>';}}
+    }
     else if(st.kind==="break"){if(cd)cd.textContent=fmtCD(st.remain);var pb=$("pbar");if(pb)pb.style.width=Math.max(0,Math.round(st.remain/st.total*100))+"%";}
   },1000);}
 
 function bindHome(){
   document.querySelectorAll("[data-lang]").forEach(function(b){b.addEventListener("click",function(){lang=b.getAttribute("data-lang");store.set("cella.lang",lang);renderHome();});});
   var g=$("gear");if(g)g.addEventListener("click",openSettings);
-  var p=$("photoBtn");if(p)p.addEventListener("click",function(){p.style.opacity=.5;});
 }
 
 var sheetEl=$("sheet"),scrim=$("scrim");

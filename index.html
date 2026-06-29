@@ -252,7 +252,7 @@ function toMin(h){var p=h.split(":");return (+p[0])*60+(+p[1]);}
 function hhmm(m){m=Math.round(m);return (m/60|0)+":"+((m%60)<10?"0":"")+(m%60);}
 function nowMinF(){var d=new Date();return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;}
 function fmtSec(s){s=Math.max(0,Math.round(s));var m=s/60|0,x=s%60;return (m<10?"0":"")+m+":"+(x<10?"0":"")+x;}
-function fmtCD(s){if(s>=3600){var h=s/3600|0,m=(s%3600)/60|0;return h+":"+(m<10?"0":"")+m;}return fmtSec(s);}
+function fmtCD(s){return fmtSec(s);}
 function isWeekend(){var g=new Date().getDay();return g===0||g===6;}
 function dateLine(d){var w=WD[lang][d.getDay()],Y=d.getFullYear(),M=d.getMonth()+1,D=d.getDate();
   if(lang==="ko")return Y+". "+M+". "+D+" ("+w+")";
@@ -295,7 +295,7 @@ function mergedBlocks(){
 function nowState(){var bs=mergedBlocks(),cur=nowMinF();
   if(!bs.length)return {kind:"empty"};
   for(var i=0;i<bs.length;i++){var b=bs[i],a=toMin(b.s),z=toMin(b.e);
-    if(cur>=a&&cur<z)return {kind:"active",b:b,remain:(z-cur)*60,total:(z-a)*60};
+    if(cur>=a&&cur<z)return {kind:"active",b:b,remain:(z-cur)*60,total:(z-a)*60,next:i+1<bs.length?bs[i+1]:null};
     if(cur<a){if(i===0)return {kind:"before",next:b,remain:(a-cur)*60};
       var ps=toMin(bs[i-1].e);return {kind:"break",next:b,prev:bs[i-1],remain:(a-cur)*60,total:(a-ps)*60};}}
   return {kind:"after"};}
@@ -307,6 +307,24 @@ function langBar(attr){attr=attr||"data-lang";var o=[["en","EN"],["ko","\ud55c"]
 function isColorDark(hex){if(!hex||hex.length<7)return true;var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b2=parseInt(hex.slice(5,7),16);return (r*299+g*587+b2*114)/1000<155;}
 function bookBox(book,color){var tc=isColorDark(color)?'#fff':'rgba(0,0,0,.78)';return '<span style="background:'+esc(color)+';color:'+tc+';border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:600">'+esc(book)+'</span>';}
 
+function nextInfoBox(n){
+  if(!n||n.cat==='meal')return '';
+  if(n.cat==='self')return '<div style="background:#F2F5FB;border-radius:10px;padding:9px 12px;margin-top:10px;display:flex;align-items:center;gap:9px">'
+    +'<span style="font-size:10px;color:#9aa0a8;flex:none">'+esc(t("next"))+'</span>'
+    +'<span style="font-size:13px;font-weight:600;color:#0E0E10">'+esc(t("self"))+'</span>'
+    +'<span style="font-size:11px;color:#9aa0a8;margin-left:auto">'+esc(n.s)+'</span></div>';
+  var tc=isColorDark(n.color||"#444")?'#fff':'rgba(0,0,0,.78)';
+  return '<div style="background:#F2F5FB;border-radius:10px;padding:9px 12px;margin-top:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+    +'<span style="font-size:10px;color:#9aa0a8">'+esc(t("next"))+'</span>'
+    +'<span style="font-size:13px;font-weight:600;color:#0E0E10">'+esc(n.skill||n.book||'')+'</span>'
+    +'<span style="font-size:11px;color:#9aa0a8">'+esc(n.teacher||'')+'</span>'
+    +'<span style="margin-left:auto;font-size:11px;font-weight:700;background:#EAF0FB;color:#0B54CC;border-radius:5px;padding:2px 7px">'+esc(n.room)+'</span>'
+    +'</div>'
+    +'<div style="background:'+esc(n.color||'#888')+';border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:7px">'
+    +svg("book",14,tc)+'<span style="font-size:11.5px;font-weight:700;color:'+tc+'">'+esc(n.book||'')+'</span></div>'
+    +'</div>';
+}
 function nowCard(st){
   if(st.kind==="active"){
     var b=st.b,frac=st.remain/st.total,meal=b.cat==="meal",self=b.cat==="self";
@@ -323,6 +341,7 @@ function nowCard(st){
         +'<div style="font-size:13px;opacity:.65">'+esc(t("remaining"))+'</div>'
         +'<div class="mono" style="font-size:17.5px;font-weight:600" id="cd">'+fmtCD(st.remain)+'</div>'
         +'</div><div class="bar" style="margin-top:8px"><span id="pbar" style="width:'+barW+'%"></span></div>'
+        +nextInfoBox(st.next)
         +'</div></div>';
     }
     /* ── 셀프스터디 ── */
@@ -335,6 +354,7 @@ function nowCard(st){
         +'<div style="text-align:center;margin-top:18px;font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1px" id="cd">'+fmtCD(st.remain)+'</div>'
         +'<div style="text-align:center;font-size:12px;opacity:.65;margin-top:5px">'+esc(t("remaining"))+'</div>'
         +'<div class="bar" style="margin-top:14px"><span id="pbar" style="width:'+barW+'%"></span></div>'
+        +nextInfoBox(st.next)
         +'</div></div>';
     }
     /* ── 수업 ── */
@@ -371,13 +391,19 @@ function nowCard(st){
         +'<div class="rmv">'+esc(n.s)+' \u2013 '+esc(n.e)+'</div></div>'
         +'<div class="ric">'+svg("book",28,"#0B54CC")+'</div></div>';
     } else {
-      var fromRoom=st.prev&&st.prev.room?esc(st.prev.room)+" \u2192 ":"";
-      var moveLine='<div style="display:inline-flex;align-items:center;gap:4px;background:#EAF0FB;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:600;color:#0B54CC;margin-top:5px">'
-        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0B54CC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
-        +fromRoom+esc(n.room)+' \u00b7 '+esc(titleOf(n))+(n.teacher?" \u00b7 "+esc(n.teacher):"")+'</div>';
-      box='<div class="roombox"><div style="flex:1"><div class="rl">'+esc(t("nextRoom"))+'</div>'
-        +'<div class="rno">'+esc(n.room)+'</div>'+moveLine+'</div>'
-        +'<div class="ric">'+svg("pin",28,"#0B54CC")+'</div></div>';
+      var fromRoom=st.prev&&st.prev.room?esc(st.prev.room)+' \u2192 ':"";
+      var tc2=isColorDark(n.color||"#444")?'#fff':'rgba(0,0,0,.78)';
+      var moveChip='<div style="display:inline-flex;align-items:center;gap:4px;background:#EAF0FB;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:#0B54CC">'
+        +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0B54CC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+        +fromRoom+esc(n.room)+' \u00b7 '+esc(titleOf(n))+(n.teacher?' \u00b7 '+esc(n.teacher):"")+'</div>';
+      box='<div class="roombox"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        +'<div><div class="rl">'+esc(t("nextRoom"))+'</div><div class="rno">'+esc(n.room)+'</div></div>'
+        +moveChip+'</div>'
+        +'<div style="border-top:.5px solid #E8E9ED;padding-top:8px">'
+        +'<div class="rl" style="margin-bottom:5px">\uc900\ube44\ud560 \uad50\uc7ac</div>'
+        +'<div style="background:'+esc(n.color||'#888')+';border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px">'
+        +svg("book",16,tc2)+'<span style="font-size:12px;font-weight:700;color:'+tc2+'">'+esc(n.book||'')+'</span>'
+        +'</div></div></div>';
     }
     return '<div class="now row"><div class="wedge"></div><div class="in" style="padding:0 0 10px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between">'
@@ -410,7 +436,11 @@ function cardHTML(b,state){
   var main;
   if(meal){main='<div class="main"><div class="skl">'+svg("meal",15,"var(--meal)")+esc(titleOf(b))+'</div><div class="bk">'+esc(t("hall"))+'</div></div>';}
   else if(self){main='<div class="main"><div class="skl">'+esc(t("self"))+'</div></div>';}
-  else{main='<div class="main"><div class="skl">'+esc(b.skill||b.book)+(b.teacher?' <span class="tch">'+esc(b.teacher)+'</span>':'')+'</div><div class="bk"><span class="sw" style="background:'+esc(b.color)+'"></span>'+esc(b.book)+'</div></div>';}
+  else{
+    var bookTc=isColorDark(b.color||"#444")?b.color:"#5b3000";
+    main='<div class="main"><div class="skl">'+esc(b.skill||b.book)+(b.teacher?' <span class="tch">'+esc(b.teacher)+'</span>':'')+'</div>'
+      +'<div class="bk" style="font-weight:600;color:'+esc(bookTc)+'">'+esc(b.book)+'</div></div>';
+  }
   // 우측: class→아이콘↑+강의실↓(+과거엔 체크) / meal·self→과거엔 체크만
   var rt='';
   if(!meal&&!self){
@@ -419,7 +449,12 @@ function cardHTML(b,state){
   } else if(state==="past"){
     rt='<div class="roomcol">'+svg("check",16,"#9aa0a8")+'</div>';
   }
-  return '<div class="cls row '+(meal?"meal ":self?"self ":"")+state+'">'+loc+main+rt+'</div>';
+  var hasBar=!meal&&!self&&b.color;
+  var clsOpen='<div class="cls row '+(meal?"meal ":self?"self ":"")+state+'"'+(hasBar?' style="padding-left:0;overflow:hidden"':'')+'>';
+  var barEl=hasBar?'<div style="width:5px;background:'+esc(b.color)+';align-self:stretch;flex:none;border-radius:12px 0 0 12px"></div>':'';
+  var innerOpen=hasBar?'<div style="flex:1;display:flex;align-items:center;gap:11px;padding:11px 13px 11px 8px">':'';
+  var innerClose=hasBar?'</div>':'';
+  return clsOpen+barEl+innerOpen+loc+main+rt+innerClose+'</div>';
 }
 function listHTML(arr,cur){var h="";for(var i=0;i<arr.length;i++){var b=arr[i];
   if(i>0){var gap=toMin(b.s)-toMin(arr[i-1].e);if(gap>0){var mv=(arr[i-1].room&&b.room)?esc(arr[i-1].room)+" \u2192 "+esc(b.room):t("onBreak");

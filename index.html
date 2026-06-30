@@ -547,8 +547,8 @@ scrim.addEventListener("click",closeSheet);
 function openSettings(){var ed=endDate(profile.start,profile.weeks),edTxt=ed?dateLine(ed):"-";
   openSheet('<div class="bar2"><h2>'+esc(t("settings"))+'</h2><button class="txtbtn" id="sDone">'+esc(t("done"))+'</button></div>'
    +'<div class="body"><label class="fl">'+esc(t("displayName"))+'</label><input class="fld" id="sName" value="'+esc(profile.name)+'">'
-   +'<div class="two"><div><label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="sStart" type="date" value="'+esc(profile.start)+'"></div>'
-   +'<div style="flex:0 0 92px"><label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="sWeeks" type="number" min="1" max="52" value="'+esc(profile.weeks||6)+'"></div></div>'
+   +'<label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="sStart" type="date" value="'+esc(profile.start)+'">'
+   +'<label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="sWeeks" type="number" min="1" max="52" value="'+esc(profile.weeks||6)+'">'
    +'<div class="prev"><div>'+esc(t("endsOn"))+' <span style="color:#9aa0a8" id="sEndLbl">\u00b7 '+esc(weeksAfterLabel(profile.weeks))+'</span> &nbsp;<b id="sEnd" style="color:var(--ink)">'+esc(edTxt)+'</b></div>'
    +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'+esc(t("dday"))+' <span class="dday" id="sDd">'+(dday()!=null?t("dday")+dday():"-")+'</span></div></div>'
    +'<div style="height:18px"></div><button class="ghost" id="sEdit" style="margin-top:0">'+svg("edit",15,"#5b6068")+' '+esc(t("editSched"))+'</button></div>');
@@ -606,8 +606,8 @@ function openClassForm(id){
 function renderOnboarding(){
   $("app").innerHTML='<div class="onb">'+wm(30)+'<div class="sub">'+esc(t("setup"))+'</div><div style="display:inline-flex">'+langBar("data-lang2")+'</div>'
     +'<div class="left" style="margin-top:22px"><label class="fl">'+esc(t("displayName"))+'</label><input class="fld" id="oName" placeholder="Gordon">'
-    +'<div class="two"><div><label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="oStart" type="date" value="2026-06-22"></div>'
-    +'<div style="flex:0 0 92px"><label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="oWeeks" type="number" min="1" max="52" value="6"></div></div>'
+    +'<label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="oStart" type="date" value="2026-06-22">'
+    +'<label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="oWeeks" type="number" min="1" max="52" value="6">'
     +'<div class="prev"><div>'+esc(t("endsOn"))+' <span style="color:#9aa0a8" id="oEndLbl"></span> &nbsp;<b id="oEnd" style="color:var(--ink)"></b></div><div style="margin-top:4px">'+esc(t("dday"))+' <span class="dday" id="oDd"></span></div></div></div>'
     +'<button class="primary" id="oGo">CELLA</button></div>';
   document.querySelectorAll("[data-lang2]").forEach(function(b){b.addEventListener("click",function(){lang=b.getAttribute("data-lang2");store.set("cella.lang",lang);renderOnboarding();});});

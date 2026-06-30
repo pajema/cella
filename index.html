@@ -125,6 +125,10 @@ label.fl{font-size:12.5px;color:var(--sub);font-weight:500;display:block;margin:
 label.fl:first-child{margin-top:0}
 .fld{width:100%;min-width:0;max-width:100%;border:1px solid #D8DCE3;border-radius:11px;padding:12px 13px;font-size:15px;font-family:inherit;color:var(--ink);background:#fff;outline:none;display:block;box-sizing:border-box}
 .fld[type="date"],.fld[type="time"],.fld[type="number"]{-webkit-appearance:none;appearance:none}
+.datewrap{position:relative;width:100%}
+.dateDisp{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dateDisp span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dateNative{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px}
 .fld:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,84,204,.12)}
 .two{display:flex;gap:10px}.two>div{flex:1}
 .seg{display:flex;gap:6px}
@@ -266,6 +270,7 @@ function weeksAfterLabel(w){w=w||6;
   if(lang==="zh")return "\u7b2c"+w+"\u9031\u9031\u4e94";
   return w+(w===1?"st":w===2?"nd":w===3?"rd":"th")+"-week Friday";
 }
+function dateOnly(s){var d=new Date(s+"T00:00:00");if(isNaN(d))return s;return dateLine(d);}
 function endDate(s,weeks){var d=new Date(s+"T00:00:00");if(isNaN(d))return null;weeks=weeks||6;return new Date(d.getTime()+((weeks*7-3)*86400000));}
 function dday(){var ed=endDate(profile.start,profile.weeks);if(!ed)return null;var n=new Date();var today=new Date(n.getFullYear(),n.getMonth(),n.getDate());return Math.max(0,Math.round((ed-today)/86400000));}
 
@@ -548,13 +553,16 @@ scrim.addEventListener("click",closeSheet);
 function openSettings(){var ed=endDate(profile.start,profile.weeks),edTxt=ed?dateLine(ed):"-";
   openSheet('<div class="bar2"><h2>'+esc(t("settings"))+'</h2><button class="txtbtn" id="sDone">'+esc(t("done"))+'</button></div>'
    +'<div class="body"><label class="fl">'+esc(t("displayName"))+'</label><input class="fld" id="sName" value="'+esc(profile.name)+'">'
-   +'<label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="sStart" type="date" value="'+esc(profile.start)+'">'
+   +'<label class="fl">'+esc(t("startDate"))+'</label>'
+   +'<div class="datewrap"><div class="fld dateDisp"><span id="sStartTxt">'+esc(dateOnly(profile.start))+'</span>'+svg("cal",16,"#9aa0a8")+'</div>'
+   +'<input class="dateNative" id="sStart" type="date" value="'+esc(profile.start)+'"></div>'
    +'<label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="sWeeks" type="number" min="1" max="52" value="'+esc(profile.weeks||6)+'">'
    +'<div class="prev"><div>'+esc(t("endsOn"))+' <span style="color:#9aa0a8" id="sEndLbl">\u00b7 '+esc(weeksAfterLabel(profile.weeks))+'</span> &nbsp;<b id="sEnd" style="color:var(--ink)">'+esc(edTxt)+'</b></div>'
    +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'+esc(t("dday"))+' <span class="dday" id="sDd">'+(dday()!=null?t("dday")+dday():"-")+'</span></div></div>'
    +'<div style="height:18px"></div><button class="ghost" id="sEdit" style="margin-top:0">'+svg("edit",15,"#5b6068")+' '+esc(t("editSched"))+'</button></div>');
   var nm=$("sName"),sd=$("sStart"),sw=$("sWeeks");
   function u(){profile.name=nm.value;profile.start=sd.value;
+    var st=$("sStartTxt");if(st)st.textContent=dateOnly(profile.start);
     var wv=parseInt(sw.value,10);profile.weeks=(wv>=1&&wv<=52)?wv:6;saveAll();
     var e2=endDate(profile.start,profile.weeks);$("sEnd").textContent=e2?dateLine(e2):"-";
     $("sEndLbl").textContent="\u00b7 "+weeksAfterLabel(profile.weeks);
@@ -607,13 +615,16 @@ function openClassForm(id){
 function renderOnboarding(){
   $("app").innerHTML='<div class="onb">'+wm(30)+'<div class="sub">'+esc(t("setup"))+'</div><div style="display:inline-flex">'+langBar("data-lang2")+'</div>'
     +'<div class="left" style="margin-top:22px"><label class="fl">'+esc(t("displayName"))+'</label><input class="fld" id="oName" placeholder="Gordon">'
-    +'<label class="fl">'+esc(t("startDate"))+'</label><input class="fld" id="oStart" type="date" value="2026-06-22">'
+    +'<label class="fl">'+esc(t("startDate"))+'</label>'
+    +'<div class="datewrap"><div class="fld dateDisp"><span id="oStartTxt">'+esc(dateOnly("2026-06-22"))+'</span>'+svg("cal",16,"#9aa0a8")+'</div>'
+    +'<input class="dateNative" id="oStart" type="date" value="2026-06-22"></div>'
     +'<label class="fl">'+esc(t("duration"))+'</label><input class="fld" id="oWeeks" type="number" min="1" max="52" value="6">'
     +'<div class="prev"><div>'+esc(t("endsOn"))+' <span style="color:#9aa0a8" id="oEndLbl"></span> &nbsp;<b id="oEnd" style="color:var(--ink)"></b></div><div style="margin-top:4px">'+esc(t("dday"))+' <span class="dday" id="oDd"></span></div></div></div>'
     +'<button class="primary" id="oGo">CELLA</button></div>';
   document.querySelectorAll("[data-lang2]").forEach(function(b){b.addEventListener("click",function(){lang=b.getAttribute("data-lang2");store.set("cella.lang",lang);renderOnboarding();});});
   var nm=$("oName"),sd=$("oStart"),ow=$("oWeeks");
   function u(){var wv=parseInt(ow.value,10);var weeks=(wv>=1&&wv<=52)?wv:6;
+    var ot=$("oStartTxt");if(ot)ot.textContent=dateOnly(sd.value);
     var ed=endDate(sd.value,weeks);$("oEnd").textContent=ed?dateLine(ed):"-";
     $("oEndLbl").textContent="\u00b7 "+weeksAfterLabel(weeks);
     var n=new Date();var today=new Date(n.getFullYear(),n.getMonth(),n.getDate());var d=ed?Math.max(0,Math.round((ed-today)/86400000)):null;$("oDd").textContent=d!=null?t("dday")+d:"-";}
